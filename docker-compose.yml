@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  rl-firewall:
+    build: .
+    container_name: rl-firewall
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./logs:/app/logs
+      - ./models:/app/models
+      - ./data:/app/data
+    environment:
+      - INTERFACE=eth0
+      - DRY_RUN=true
+    restart: unless-stopped
+
+  dashboard:
+    build: .
+    container_name: rl-dashboard
+    ports:
+      - "8080:8080"
+    command: python src/dashboard/app_complete.py
+    volumes:
+      - ./logs:/app/logs
+      - ./src:/app/src
+    depends_on:
+      - rl-firewall
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - rl-firewall
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus

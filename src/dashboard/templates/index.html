@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RL Firewall - Smart Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .status-badge {
+            background: #10b981;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .status-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .container {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #60a5fa;
+        }
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+        .stat-subtext {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+        .neutral { color: #f59e0b; }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .panel {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .panel-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .events-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .event-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #334155;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+        .event-item:last-child { border-bottom: none; }
+        .event-time { color: #64748b; font-family: monospace; font-size: 0.75rem; }
+        .event-ip { color: #94a3b8; font-weight: 600; }
+        .event-action {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .action-BLOCK { background: #ef4444; color: white; }
+        .action-ALLOW { background: #10b981; color: white; }
+        .action-RATE-LIMIT { background: #f59e0b; color: black; }
+        .event-attack { border-left: 3px solid #ef4444; }
+        .event-legit { border-left: 3px solid #10b981; }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: #2563eb; transform: translateY(-1px); }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        
+        .connection-status {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .connected { background: #10b981; color: white; }
+        .disconnected { background: #ef4444; color: white; }
+        
+        @media (max-width: 1024px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>🔥 RL Firewall Dashboard</h1>
+            <p style="color: #94a3b8; margin-top: 0.25rem;">Real-time Adaptive Security System</p>
+        </div>
+        <div class="status-badge" id="systemStatus">LIVE</div>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <button class="btn btn-danger" onclick="flushRules()">🛑 Flush All Rules</button>
+            <button class="btn" onclick="exportLogs()">📥 Export Logs</button>
+            <button class="btn btn-success" onclick="location.reload()">🔄 Refresh</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Events</div>
+                <div class="stat-value" id="totalEvents">0</div>
+                <div class="stat-subtext">Packets processed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Attacks Detected</div>
+                <div class="stat-value positive" id="attacksDetected">0</div>
+                <div class="stat-subtext">Malicious traffic</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">False Positives</div>
+                <div class="stat-value negative" id="falsePositives">0</div>
+                <div class="stat-subtext">Legitimate blocked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">FP Rate</div>
+                <div class="stat-value neutral" id="fpRate">0%</div>
+                <div class="stat-subtext">False positive rate</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📊 RL Performance Metrics</div>
+                    <select id="timeRange" onchange="updateChart()">
+                        <option value="5">Last 5 min</option>
+                        <option value="15">Last 15 min</option>
+                        <option value="60">Last hour</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="metricsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">🎯 Action Distribution</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="actionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">📡 Live Traffic Events</div>
+                <span style="color: #64748b; font-size: 0.875rem;">Real-time WebSocket</span>
+            </div>
+            <div class="events-list" id="eventsList">
+                <div style="text-align: center; color: #64748b; padding: 2rem;">
+                    Waiting for events...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="connection-status disconnected" id="connStatus">Disconnected</div>
+
+    <script>
+        let ws;
+        let metricsChart, actionChart;
+        
+        // Initialize charts
+        function initCharts() {
+            const ctx1 = document.getElementById('metricsChart').getContext('2d');
+            metricsChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Blocked Attacks',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'False Positives',
+                        data: [],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#94a3b8' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#64748b' }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#64748b' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('actionChart').getContext('2d');
+            actionChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ALLOW', 'BLOCK', 'RATE-LIMIT'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        // WebSocket connection
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8080/ws');
+            
+            ws.onopen = () => {
+                document.getElementById('connStatus').className = 'connection-status connected';
+                document.getElementById('connStatus').textContent = 'Connected';
+                ws.send('ping');
+            };
+            
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                if (msg.type === 'stats_update') {
+                    updateStats(msg.data);
+                }
+            };
+            
+            ws.onclose = () => {
+                document.getElementById('connStatus').className = 'connection-status disconnected';
+                document.getElementById('connStatus').textContent = 'Disconnected';
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // Update statistics
+        function updateStats(data) {
+            document.getElementById('totalEvents').textContent = data.total_events || 0;
+            document.getElementById('attacksDetected').textContent = data.attacks || 0;
+            document.getElementById('falsePositives').textContent = data.false_positives || 0;
+            document.getElementById('fpRate').textContent = (data.fp_rate * 100).toFixed(2) + '%';
+            
+            // Update action chart
+            if (data.allows !== undefined) {
+                actionChart.data.datasets[0].data = [data.allows, data.blocks, data.rate_limits];
+                actionChart.update();
+            }
+        }
+
+        // Fetch recent events
+        async function fetchEvents() {
+            try {
+                const response = await fetch('/api/events?limit=20');
+                const events = await response.json();
+                renderEvents(events);
+            } catch (e) {
+                console.error('Failed to fetch events:', e);
+            }
+        }
+
+        // Render events list
+        function renderEvents(events) {
+            const container = document.getElementById('eventsList');
+            if (events.length === 0) return;
+            
+            container.innerHTML = events.map(e => `
+                <div class="event-item ${e.is_attack ? 'event-attack' : 'event-legit'}">
+                    <div class="event-time">${new Date(e.timestamp * 1000).toLocaleTimeString()}</div>
+                    <div>
+                        <div class="event-ip">${e.src_ip}:${e.dst_port}</div>
+                        <div style="color: #64748b; font-size: 0.75rem;">${e.reason || ''}</div>
+                    </div>
+                    <span class="event-action action-${e.action}">${e.action}</span>
+                </div>
+            `).join('');
+        }
+
+        // Fetch metrics history
+        async function updateChart() {
+            const minutes = document.getElementById('timeRange').value;
+            try {
+                const response = await fetch(`/api/metrics/history?minutes=${minutes}`);
+                const data = await response.json();
+                
+                const labels = data.map(d => new Date(d.timestamp * 1000).toLocaleTimeString());
+                const blocked = data.map(d => d.attacks_blocked);
+                const fps = data.map(d => d.false_positives);
+                
+                metricsChart.data.labels = labels;
+                metricsChart.data.datasets[0].data = blocked;
+                metricsChart.data.datasets[1].data = fps;
+                metricsChart.update();
+            } catch (e) {
+                console.error('Failed to fetch metrics:', e);
+            }
+        }
+
+        // Control functions
+        async function flushRules() {
+            if (!confirm('Are you sure you want to flush all iptables rules?')) return;
+            try {
+                await fetch('/api/flush', { method: 'POST' });
+                alert('Rules flushed successfully');
+            } catch (e) {
+                alert('Failed to flush rules');
+            }
+        }
+
+        function exportLogs() {
+            window.open('/api/export', '_blank');
+        }
+
+        // Initialize
+        initCharts();
+        connectWebSocket();
+        fetchEvents();
+        updateChart();
+        setInterval(fetchEvents, 2000);
+        setInterval(updateChart, 5000);
+    </script>
+</body>
+</html>
