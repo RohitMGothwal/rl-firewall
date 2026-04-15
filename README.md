@@ -13,20 +13,23 @@ Dynamic Reinforcement Learning Firewall — DQN-based adaptive packet filtering
 
 ## 🏗️ Architecture
 rl-firewall/
-├── src/
-│   ├── capture/         # Packet capture (scapy)
-│   ├── features/        # Feature extraction
-│   ├── rl_agent/        # DQN agent (SB3)
-│   ├── enforcer/        # iptables rules
-│   ├── monitor/         # Metrics & logging
-│   └── dashboard/       # Web UI (FastAPI)
-├── tests/               # Pytest suite
-├── data/                # Datasets
-├── models/              # Saved checkpoints
-├── logs/                # Audit trails
-├── train.py             # Training entry point
-├── main.py              # Live firewall
-└── evaluate.py          # Evaluation script
+│
+├── 📁 src/                     # Core source code
+│   ├── 📁 capture/             # Packet capture using Scapy
+│   ├── 📁 features/            # Feature extraction & preprocessing
+│   ├── 📁 rl_agent/            # DQN agent (Stable-Baselines3)
+│   ├── 📁 enforcer/            # Firewall rule enforcement (iptables)
+│   ├── 📁 monitor/             # Metrics, logging & observability
+│   └── 📁 dashboard/           # Web dashboard (FastAPI)
+│
+├── 📁 tests/                   # Pytest test suite
+├── 📁 data/                    # Training & evaluation datasets
+├── 📁 models/                  # Saved model checkpoints
+├── 📁 logs/                    # Logs & audit trails
+│
+├── 🚀 train.py                 # Training entry point for RL agent
+├── 🔥 main.py                  # Live firewall execution script
+└── 📊 evaluate.py              # Model evaluation & performance metrics
 
 ### State Vector (7 Features)
 | Index | Feature | Description | Range |
