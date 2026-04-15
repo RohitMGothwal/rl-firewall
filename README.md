@@ -89,7 +89,7 @@ pip install -r requirements.txt
 pytest tests/ -v
 ```
 
-###🐳 Option 2: Docker (Recommended for Production)
+### 🐳 Option 2: Docker (Recommended for Production)
 
 ```bash
 # Clone repository
@@ -111,9 +111,9 @@ docker compose logs -f dashboard
 docker compose down
 ```
 
-###⚡ 2. Quick Start
+### ⚡ 2. Quick Start
 
-  ###🐍 Python Mode:
+  ### 🐍 Python Mode:
 
   ```bash
   # Terminal 1: Start Dashboard
@@ -127,7 +127,7 @@ docker compose down
   python train.py --data data/processed/cicids_processed.csv
   ```
 
-###🐳 Docker Mode:
+### 🐳 Docker Mode:
 
 ```bash
 # Everything runs automatically
@@ -137,9 +137,9 @@ docker compose up --build
 
 ```
 
-###🛠️ 3. Troubleshooting
+### 🛠️ 3. Troubleshooting
 
-  ###⚠️ Port already in use?
+  ### ⚠️ Port already in use?
 
   ```bash
   # Kill process on port 8080
@@ -147,12 +147,12 @@ docker compose up --build
 
   ```
 
-  ###🔐 Permission denied (macOS)?
+  ### 🔐 Permission denied (macOS)?
 	-	Go to:
   System Settings → Privacy & Security → Full Disk Access
 	-	Grant access to your terminal
 
-  ###📦 Module not found errors?
+  ### 📦 Module not found errors?
 
   ```bash
   # Ensure you're in the correct directory
