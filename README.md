@@ -15,12 +15,12 @@ Dynamic Reinforcement Learning Firewall — DQN-based adaptive packet filtering
 - rl-firewall/
 │
 - 📁 src/                     # Core source code
-|    - 📁 capture/             # Packet capture using Scapy
-│   - 📁 features/            # Feature extraction & preprocessing
-│   - 📁 rl_agent/            # DQN agent (Stable-Baselines3)
-│   - 📁 enforcer/            # Firewall rule enforcement (iptables)
-│   - 📁 monitor/             # Metrics, logging & observability
-│   - 📁 dashboard/           # Web dashboard (FastAPI)
+   - 📁 capture/             # Packet capture using Scapy
+   - 📁 features/            # Feature extraction & preprocessing
+   - 📁 rl_agent/            # DQN agent (Stable-Baselines3)
+   - 📁 enforcer/            # Firewall rule enforcement (iptables)
+   - 📁 monitor/             # Metrics, logging & observability
+   - 📁 dashboard/           # Web dashboard (FastAPI)
 │
 - 📁 tests/                   # Pytest test suite
 - 📁 data/                    # Training & evaluation datasets
